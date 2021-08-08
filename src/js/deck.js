@@ -6,8 +6,7 @@ export default class Deck {
         this.cards = cards;
     }
     emptyDeck(){
-        this.cards = [];
-        this.cards.length = 0;
+        this.cards.splice(0,this.cards.length)
     }
     shuffle(){
         for (let i = this.size-1; i>0; i--){
@@ -26,8 +25,11 @@ export default class Deck {
     get topCard(){
         return this.cards[0]
     }
-    collect(cards){
-        this.cards = cards.concat(this.cards)
+    collectMultiple(cards){
+        this.cards = [...this.cards,...cards]
+    }
+    collectSingle(card){
+        this.cards.unshift(card)
     }
     remove(card){
         const index = this.cards.indexOf(card)

@@ -5,7 +5,7 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Card Game</title>
-        
+        <script src="../js/script.js" type="module"></script>
         <link rel="stylesheet" href="../css/style.css">
     </head>
     <body>
@@ -30,16 +30,18 @@
             <div class="computer-card-slot opponent opphand facedown" id = "opphand2"></div>
             <div class="computer-card-slot opponent opphand facedown" id = "opphand3"></div>
             <!--center row -->
-            <div class="descriptive-text center-desc" id="draw-text" >Draw Pile</div>
-            <div class="descriptive-text center-desc" id="center-text">Center Pile</div>
+            <div class="descriptive-text center-desc " id="draw-text" >Draw Pile</div>
+            <div class="descriptive-text center-desc" id="center-text">Center Pile
+                <button class = "center-desc" id="collect-button">Collect</button>
+            </div>
             <div class="descriptive-text center-desc" id="trash-text">Trash Pile</div>
-            <div class="computer-deck center"id="draw">52</div>
+            <div class="computer-deck center "id="draw">52</div>
             <div class="computer-deck center" id="center"></div>
             <div class="computer-deck center" id="trash">0</div>
             <!--player hand-->
             <div class="descriptive-text handsdesc" id="hand1">Your<br>hand</div>
-            <div class="playhand player" id="cards-left-left">0</div>
-            <div class="arrow player playhand" id = "left-arrow">&larr;</div>
+            <div class="playhand player " id="cards-left-left">0</div>
+            <div class="arrow player playhand " id = "left-arrow">&larr;</div>
             <div class="computer-card-slot playhand player" id = "playhand1"></div>
             <div class="computer-card-slot playhand player" id = "playhand2"></div>
             <div class="computer-card-slot playhand player" id = "playhand3"></div>
@@ -48,7 +50,7 @@
                 <div class="playhand player" id="cards-left-right">&nbsp;0</div>
             </div>
             <!--player penultimate hand-->
-            <div class="descriptive-text cards handsdesc" id="pen1">Your<br>penultimate<br>hand</div>
+            <div class="descriptive-text handsdesc" id="pen1">Your<br>penultimate<br>hand</div>
             <div class="computer-card-slot playpenult player" id = "playpen1"></div>
             <div class="computer-card-slot playpenult player" id = "playpen2"></div>
             <div class="computer-card-slot playpenult player" id = "playpen3"></div>
@@ -61,41 +63,6 @@
         <footer>
             <div>2021 &copy; A Gurveer Singh Production</div>
         </footer>
-        <!-- <script>
-            function updatePiles(){
-                var drawSize = document.getElementById('draw');
-                var trashSize = document.getElementById('trash');
-                var centerPile = document.getElementById('center');
-                $('draw').innerHTML = draw.size;
-                $('trash').innerHTML = trash.size;
-                $('center').appendChild(center.topCard.getHTML());
-            }
-            function dealCards(){
-                cardSlots = $('computer-card-slot')
-                for (var i=0; i<cardSlots.length;i++){
-                    //deal off the top of the deck
-                    let dealtCard = draw.cards.shift();
-                    cardSlots[i].appendChild(dealtCard.getHTML());
-                    if(i<=2){//oppfinal
-                        oppfinal.push(dealtCard);
-                    } else if(i>2 && i<6){ //opppen
-                        opppen.push(dealtCard);
-                    } else if (i>5 && i<9){//opphand
-                        opphand.push(dealtCard);
-                    } else if (i>8 && i<12){
-                        playfinal.push(dealtCard);
-                    } else if (i>11 && i<15){
-                        playpen.push(dealtCard);
-                    } else {
-                        playhand.push(dealtCard);   
-                    }
-                }
-                const startingCard = draw.cards.shift();
-                center.cards.unshift(startingCard);
-                updatePiles();
-            }
-            
-        </script> -->
         <script src="../js/script.js" type="module"></script>
     </body>
 </html>
