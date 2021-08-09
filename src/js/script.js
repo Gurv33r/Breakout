@@ -395,6 +395,24 @@ function isSpecialCard(card){
     }
     return false
 }
+// all 2s give the player another turn when placed, 
+// allowing them to place another card on top of the 2 they placed
+// this function just returns a 2 for now and is implemented in chooseCard()
+function execute2(){
+    if(!turnOver){
+        return 2
+    } else {
+        return 4
+    }
+    // else {
+    //     if(oppTurn()){
+    //         playerWon = false
+    //         return 2;// someone won
+    //     } else {
+    //         return 0 
+    //     }
+    // }
+}
 // sets the 7 card into effect
 // the actual effect is implemented in judgeCard()
 // if a player places down a 7, then the next player must play either:
@@ -536,28 +554,12 @@ function playerTurn(){
         playerWon=false
     }
 }
-// all 2s give the player another turn when placed, 
-// allowing them to place another card on top of the 2 they placed
-// this function just returns a 2 for now and is implemented in chooseCard()
-function execute2(){
-    if(!turnOver){
-        return 2
-    } else {
-        return 4
-    }
-    // else {
-    //     if(oppTurn()){
-    //         playerWon = false
-    //         return 2;// someone won
-    //     } else {
-    //         return 0 
-    //     }
-    // }
-}
+
 //ending sequence that occurs after the game is over
 function determineWinner(){
     playerWon ? alert("You have bested the machine! Give yourself a pat on the back") : alert('You lost. Tough break, buddy. Reload the page to try again')
 }
+
 //start the game by calling game()
 game()
 
