@@ -373,14 +373,21 @@ function placeCard(handContext, cardNum){
          }*/
      }
      //updates hand display after all the changes
-    chosenCard.children[0].replaceWith(playhand[index].getHTML()) // update chosen card's display
+    chosenCard.children[0].replaceWith(handContext[index].getHTML()) // update chosen card's display
      // update the the rest of the cards given the position of the chosen card - accommadate for the drawn card
-    if (cardNum === 1){ //chose the leftmost card
-         document.getElementById(varstrmap.get(handContext) + '2').children[0].replaceWith(playhand[index+1].getHTML())
-         document.getElementById(varstrmap.get(handContext) + '3').children[0].replaceWith(playhand[index+2].getHTML())
-     } else if(cardNum === 2){// chose the middle card
-        document.getElementById(varstrmap.get(handContext) + '3').children[0].replaceWith(playhand[index+1].getHTML())
-     }
+    if (onOppHand || onPlayHand && (!onPlayFinal && !onPlayPen && !onOppPen && !onOppFinal)){
+        if (cardNum === 1){ //chose the leftmost card
+            document.getElementById(varstrmap.get(handContext) + '2').children[0].replaceWith(handContext[index+1].getHTML())
+            document.getElementById(varstrmap.get(handContext) + '3').children[0].replaceWith(handContext[index+2].getHTML())
+       } else if(cardNum === 2){// chose the middle card
+           document.getElementById(varstrmap.get(handContext) + '3').children[0].replaceWith(handContext[index+1].getHTML())
+       }
+    } else {
+        //set card to empty element (aka empty document fragment) 
+        document.getElementById(varstrmap.get(handContext) + cardNum).children[0].replaceWith(document.createDocumentFragment())
+        //set the card to have no background
+        document.getElementById(varstrmap.get(handContext) + cardNum).style = ""
+    }
      //update the draw, center, trash piles and arrows as needed
      updatePiles()
      return rv
