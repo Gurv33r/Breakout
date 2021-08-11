@@ -157,8 +157,6 @@ function endPlayerTurn(){
         //remove all event listeners
         document.getElementById('collect-button').removeEventListener('click', collectCenter)
         if (onPlayHand && !onPlayPen && !onPlayFinal){ // player hand case
-        document.getElementById('left-arrow').removeEventListener('click',shiftLeft)
-        document.getElementById('right-arrow').removeEventListener('click', shiftRight)
         document.getElementById('playhand1').removeEventListener('click', chooseCard1)
         document.getElementById('playhand2').removeEventListener('click', chooseCard2)
         document.getElementById('playhand3').removeEventListener('click', chooseCard3)
@@ -232,7 +230,7 @@ function chooseCard1(){
         }
     }
     
-    if(out ===0 || out === 10){
+    if(out ===0 || out === 10 || out === 7){
         endPlayerTurn()
     }
     if(out===2){
@@ -286,7 +284,7 @@ function chooseCard2(){
         }
         
     }
-    if(out ===0 || out === 10){
+    if(out ===0 || out === 10 || out === 7){
         endPlayerTurn()
     }
     if(out===2){
@@ -335,7 +333,7 @@ function chooseCard3(){
         }
         
     }
-    if(out ===0 || out === 10){
+    if(out ===0 || out === 10 || out === 7){
         endPlayerTurn()
     }
     //will check if the player has won on after placing down a 2 
@@ -361,15 +359,18 @@ function placeCard(handContext, cardNum){
          outcome = judgeCard(handContext[index]) 
          if (outcome === 1){ // card shouldn't be placed down
              return 1
-         } else { // card is placed down
-             center.collectSingle(handContext[index])
-             handContext.splice(index,1) // remove the card from the hand
-             rv = outcome
+         } else if (outcome ===0 ) { // card should be placed down
+            center.collectSingle(handContext[index])
          }
+         //acts upon all placeable cards (inlucding special cards)
+         handContext.splice(index,1) // remove the card from the hand
+         rv = outcome
          // draw a card if necessary
-         if (playhand.length<3 && onPlayHand && !onPlayPen && !onPlayFinal && !drawEmpty){
+         if (playhand.length<3 && onPlayHand && !onPlayPen && !onPlayFinal && !drawEmpty && !turnOver){
             playhand = drawCard(playhand)
-         }
+         } /*else if (opphand.length<3 && onOppHand && !onOppPen && !onOppFinal && !drawEmpty && turnOver){
+             opphand = drawCard(opphand)
+         }*/
      }
      //updates hand display after all the changes
     chosenCard.children[0].replaceWith(playhand[index].getHTML()) // update chosen card's display
@@ -435,35 +436,56 @@ function execute10(){
 // if a player doesn't have any cards that don't make judgeCard() return a 1, then the player must collect the center 
 function judgeCard(card){
     var top = ""
-    past7 ? top = "7" : top = center.topCard.value
-    // special case trumps all
-    if (isSpecialCard(card)){
-        past7 = false
-        updatePiles()
-        if (card.value === "2"){
-            return execute2()
-        } else if (card.value === "7"){
-            execute7()
+    //3 cases:
+        //1) center is empty
+        //2) center has a nonspecial card
+        //3) center has a 7
+    //check if center is empty
+    if (center.size === 0){
+        //accept any card
+        //check for special cards first
+        if (isSpecialCard(card)){
+            center.collectSingle(card)
+            if (card.value === "2"){
+                return execute2()
+            } else if (card.value === "7"){
+                execute7()
+                return 7
+            } else if (card.value === "10"){
+                execute10()
+                return 10
+            }
+        } else {
             return 0
-        } else if (card.value === "10"){
-            execute10()
-            return 10
-        }    
-    }
-    else if (vmap.get(card.value) > vmap.get(top)){ // card is greater than top card
-        if(past7){ // bad if the last card was a 7
-            return 1
         }
-        past7=false
-        return 0 // fine in the normal case
-    } 
-    else if (vmap.get(card.value) <= vmap.get(top)){ // card is less than or equal to the top card
-        //if the card was = to 7, it should've been handled already in the special case code
-        if(past7){ // good if the last card was a 7
+    } else {
+        past7 ? top = "7" : top = center.topCard.value
+        if(isSpecialCard(card)){
+            center.collectSingle(card)
+            if (card.value === "2"){
+                return execute2()
+            } else if (card.value === "7"){
+                execute7()
+                return 7
+            } else if (card.value === "10"){
+                execute10()
+                return 10
+            }  
+        } else if (vmap.get(card.value) > vmap.get(top)){ // card is greater than top card
+            if(past7){ // bad if the last card was a 7
+                return 1
+            }
             past7=false
-            return 0
+            return 0 // fine in the normal case
+        } else if (vmap.get(card.value) <= vmap.get(top)){ // card is less than or equal to the top card
+            //if the card was = to 7, it should've been handled already in the special case code
+            if(past7){ // good if the last card was a 7
+                past7=false
+                return 0
+            }
+            return 1// bad in the normal case
         }
-        return 1// bad in the normal case
+
     }
 }
 // provides functionality to the left arrow 
@@ -524,6 +546,7 @@ function updateArrows(){
 function playerTurn(){
     if (playfinal.length + playpen.length + playhand.length + draw.size == 0){ // done
         playerWon=true
+        turnOver=true
     } else {
         turnOver = false
         document.getElementById('collect-button').addEventListener('click',collectCenter)
