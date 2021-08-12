@@ -174,54 +174,69 @@ function endPlayerTurn(){
 }
 //provides funtionality to the collect button
 //player's hand collects the entirety of the center pile
-function collectCenter(){
+function collectCenter() {
     //collect the center into the right hand
-    if(!turnOver){
+    if (!turnOver) {
         playhand = playhand.concat(center.cards)
+        for (var i = 1; i <= 3; i++) {
+            let slot = document.getElementById('playhand' + i)
+            if (slot.children.length === 0) { // empty slot
+                slot.appendChild(playhand[i - 1].getHTML())
+            }
+        }
+        updatePiles()
         endPlayerTurn()
     } else {
         opphand = opphand.concat(center.cards)
         turnOver = false
+        for (var i = 1; i <= 3; i++) {
+            let slot = document.getElementById('opphand' + i)
+            if (slot.children.length === 0) { // empty slot
+                slot.appendChild(opphand[i - 1].getHTML())
+            }
+        }
+        updateExtra()
     }
     //empty the deck
     center.emptyDeck()
+    clearCenter()
     //update the center pile and arrows
     updatePiles()
 }
 // event listener for left cards
-function chooseCard1(){
+function chooseCard1() {
     var out = 0 // used for responding outcome of placing the card the player chose onto the center pile
-    
+
     // check if it is still the player's turn
-    if (!turnOver){
-        if (onPlayHand){ // player is on their first hand
-            out = placeCard(playhand,1) // find the outcome of the player's choice 
+    if (!turnOver) {
+        if (onPlayHand) { // player is on their first hand
+            out = placeCard(playhand, 1, null) // find the outcome of the player's choice 
         } else if (onPlayPen) { // player is on their penultimate hand 
-            out = placeCard(playpen,1) // find the outcome of the player's choice 
-        } else if (onPlayFinal){ // player is on their final hand
-            out = placeCard(playfinal, 1) // find the outcome of the player's choice 
-        } 
+            out = placeCard(playpen, 1, null) // find the outcome of the player's choice 
+        } else if (onPlayFinal) { // player is on their final hand
+            out = placeCard(playfinal, 1, null) // find the outcome of the player's choice 
+        }
     } else {
-        if (onOppHand){ //opponent is on their first hand
-            out = placeCard(opphand,1) // find the outcome of opponent's choice
+        if (onOppHand) { //opponent is on their first hand
+            out = placeCard(opphand, 1, null) // find the outcome of opponent's choice
         } else if (onOppPen) { // opponent is on their penultimate hand
-            out = placeCard(opppen,1) // find the outcome of opponent's choice
-        } else if (onOppFinal){ // opponent is on their final hand
-            out = placeCard(oppfinal, 1) // find the outcome of opponent's choice
-        } 
+            out = placeCard(opppen, 1, null) // find the outcome of opponent's choice
+        } else if (onOppFinal) { // opponent is on their final hand
+            out = placeCard(oppfinal, 1, null) // find the outcome of opponent's choice
+        }
     }
 
     // chosen card was rejected case
-    if(out === 1){
-        if (onPlayFinal && !onPlayHand && !onPlayPen){// final card was rejected
+    if (out === 1) {
+        if (onPlayFinal && !onPlayHand && !onPlayPen) {// final card was rejected
             //remove the card slot
             var chosenCard = document.getElementById('playfinal1')
             chosenCard.style.backgroundColor = "";
             //push card to playhand
-            const index = searchCard(chosenCard,playfinal)
+            const index = searchCard(chosenCard, playfinal)
             playhand.push(playfinal[index])
             // remove the card from playfinal
-            playfinal.splice(index,1)
+            playfinal.splice(index, 1)
             //playhand collects center
             collectCenter()
 
@@ -229,168 +244,168 @@ function chooseCard1(){
             playerTurn()
         }
     }
-    
-    if(out ===0 || out === 10 || out === 7){
+
+    if (out === 0 || out === 10 || out === 7) {
         endPlayerTurn()
     }
-    if(out===2){
+    if (out === 2) {
         playerTurn()
-        /*
-        if(playerWon){
-            break game
-            determineWinner()
-        }
-         */
     }
 }
 // same as chooseCard1() but for the cards in the middle column
-function chooseCard2(){
+function chooseCard2() {
     var out = 0
-    if (!turnOver){
-        if (onPlayHand){
-            out = placeCard(playhand,2)
-            // if(outcome > 0){
-            //     break game
-            // }
+    if (!turnOver) {
+        if (onPlayHand) {
+            out = placeCard(playhand, 2, null)
         } else if (onPlayPen) {
-            out = placeCard(playpen,2)
-        } else if (onPlayFinal){
-            out = placeCard(playfinal, 2)
-        } 
+            out = placeCard(playpen, 2, null)
+        } else if (onPlayFinal) {
+            out = placeCard(playfinal, 2, null)
+        }
     } else {
-        if (onOppHand){
-            out = placeCard(opphand,2)
+        if (onOppHand) {
+            out = placeCard(opphand, 2, null)
         } else if (onOppPen) {
-            out = placeCard(opppen,2)
-        } else if (onOppFinal){
-            out = placeCard(oppfinal, 2)
-        } 
+            out = placeCard(opppen, 2, null)
+        } else if (onOppFinal) {
+            out = placeCard(oppfinal, 2, null)
+        }
     }
-    if(out === 1){
-        if (onPlayFinal && !onPlayHand && !onPlayPen){// final card was rejected
+    if (out === 1) {
+        if (onPlayFinal && !onPlayHand && !onPlayPen) {// final card was rejected
             //remove the card slot
             var chosenCard = document.getElementById('playfinal2')
             chosenCard.style.backgroundColor = "";
             //push card to playhand
-            const index = searchCard(chosenCard,playfinal)
+            const index = searchCard(chosenCard, playfinal)
             playhand.push(playfinal[index])
             // remove the card from playfinal
-            playfinal.splice(index,1)
+            playfinal.splice(index, 1)
             //playhand collects center
             collectCenter()
 
         } else {
-             playerTurn()
+            playerTurn()
         }
-        
+
     }
-    if(out ===0 || out === 10 || out === 7){
+    if (out === 0 || out === 10 || out === 7) {
         endPlayerTurn()
     }
-    if(out===2){
+    if (out === 2) {
         playerTurn()
-        
-        /*
-        break game
-        determineWinner()
-         */
     }
 }
 //same as chooseCard1() but for the cards in the right column
-function chooseCard3(){
+function chooseCard3() {
+    console.log('clicked card 3')
     var out = 0
-    if (!turnOver){
-        if (onPlayHand){
-            out = placeCard(playhand,3)
+    if (!turnOver) {
+        if (onPlayHand) {
+            out = placeCard(playhand, 3, null)
         } else if (onPlayPen) {
-            out = placeCard(playpen,3)
-        } else if (onPlayFinal){
-            out = placeCard(playfinal, 3)
-        } 
+            out = placeCard(playpen, 3, null)
+        } else if (onPlayFinal) {
+            out = placeCard(playfinal, 3, null)
+        }
     } else {
-        if (onOppHand){
-            out = placeCard(opphand,3)
+        if (onOppHand) {
+            out = placeCard(opphand, 3, null)
         } else if (onOppPen) {
-            out = placeCard(opppen,3)
-        } else if (onOppFinal){
-            out = placeCard(oppfinal, 3)
-        } 
+            out = placeCard(opppen, 3, null)
+        } else if (onOppFinal) {
+            out = placeCard(oppfinal, 3, null)
+        }
     }
-    if(out === 1){
-        if (onPlayFinal && !onPlayHand && !onPlayPen){// final card was rejected
+    if (out === 1) {
+        if (onPlayFinal && !onPlayHand && !onPlayPen) {// final card was rejected
             //remove the card slot
             var chosenCard = document.getElementById('playfinal3')
             chosenCard.style.backgroundColor = "";
             //push card to playhand
-            const index = searchCard(chosenCard,playfinal)
+            const index = searchCard(chosenCard, playfinal)
             playhand.push(playfinal[index])
             // remove the card from playfinal
-            playfinal.splice(index,1)
+            playfinal.splice(index, 1)
             //playhand collects center
             collectCenter()
         } else {
-             playerTurn()
+            playerTurn()
         }
-        
+
     }
-    if(out ===0 || out === 10 || out === 7){
+    if (out === 0 || out === 10 || out === 7) {
         endPlayerTurn()
     }
     //will check if the player has won on after placing down a 2 
-    if(out===2){
+    if (out === 2) {
         playerTurn()
-        /*
-        if (playerWon){
-            break game
-            determineWinner()
-        }
-         */
     }
 }
 //created for event listener arg since it cannot take arguments itself
 //places card onto the center pile or rejects the card based on the result of judgeCard()
 //also updates the display of the hand after placing the card
-function placeCard(handContext, cardNum){
-     const chosenCard = document.getElementById(varstrmap.get(handContext) + cardNum) // find the input
-     const index = searchCard(chosenCard, handContext) //
-     var outcome = 3, rv = 0 // rv will notify how to response to the card's placement, outcome indicates the the center's reaction to the card
-     if(index>=0){ // if the input is valid 
-         // check the center's reaction to the card
-         outcome = judgeCard(handContext[index]) 
-         if (outcome === 1){ // card shouldn't be placed down
-             return 1
-         } else if (outcome ===0 ) { // card should be placed down
-            center.collectSingle(handContext[index])
-         }
-         //acts upon all placeable cards (inlucding special cards)
-         handContext.splice(index,1) // remove the card from the hand
-         rv = outcome
-         // draw a card if necessary
-         if (playhand.length<3 && onPlayHand && !onPlayPen && !onPlayFinal && !drawEmpty && !turnOver){
-            playhand = drawCard(playhand)
-         } /*else if (opphand.length<3 && onOppHand && !onOppPen && !onOppFinal && !drawEmpty && turnOver){
-             opphand = drawCard(opphand)
-         }*/
-     }
-     //updates hand display after all the changes
-    chosenCard.children[0].replaceWith(handContext[index].getHTML()) // update chosen card's display
-     // update the the rest of the cards given the position of the chosen card - accommadate for the drawn card
-    if (onOppHand || onPlayHand && (!onPlayFinal && !onPlayPen && !onOppPen && !onOppFinal)){
-        if (cardNum === 1){ //chose the leftmost card
-            document.getElementById(varstrmap.get(handContext) + '2').children[0].replaceWith(handContext[index+1].getHTML())
-            document.getElementById(varstrmap.get(handContext) + '3').children[0].replaceWith(handContext[index+2].getHTML())
-       } else if(cardNum === 2){// chose the middle card
-           document.getElementById(varstrmap.get(handContext) + '3').children[0].replaceWith(handContext[index+1].getHTML())
-       }
-    } else {
-        //set card to empty element (aka empty document fragment) 
-        document.getElementById(varstrmap.get(handContext) + cardNum).children[0].replaceWith(document.createDocumentFragment())
-        //set the card to have no background
-        document.getElementById(varstrmap.get(handContext) + cardNum).style = ""
+function placeCard(handContext, cardNum, index) {
+    console.log(onPlayHand, onOppHand)
+    var toPlace = undefined
+    if (cardNum !== null && index === null) {
+        index = searchCard(document.getElementById(varstrmap.get(handContext) + cardNum), handContext)
     }
-     //update the draw, center, trash piles and arrows as needed
-     updatePiles()
-     return rv
+    toPlace = handContext[index]
+    var outcome = 3, rv = 0 // rv will notify how to response to the card's placement, outcome indicates the the center's reaction to the card
+    if (index >= 0) { // if the input is valid 
+        // check the center's reaction to the card
+        outcome = judgeCard(toPlace)
+        if (outcome === 1) { // card shouldn't be placed down
+            return 1
+        } else if (outcome === 0) { // card should be placed down
+            center.collectSingle(toPlace)
+        }
+        //acts upon all placeable cards (inlucding special cards)
+        handContext.splice(index, 1) // remove the card from the hand
+        rv = outcome
+        // draw a card if necessary
+        if (playhand.length < 3 && onPlayHand && !onPlayPen && !onPlayFinal && !drawEmpty && !turnOver) {
+            playhand = drawCard(playhand)
+        } else if (opphand.length < 3 && onOppHand && !onOppPen && !onOppFinal && !drawEmpty && turnOver) {
+            opphand = drawCard(opphand)
+        }
+        if (onPlayHand && !(onOppHand || onPlayFinal || onOppPen || onPlayPen || onOppFinal)) {
+            if (playhand.length >= 3) { //update display
+                document.getElementById(varstrmap.get(handContext) + cardNum).children[0].replaceWith(handContext[index].getHTML()) // update chosen card's display
+                // update the rest of the hand's display
+                if (cardNum === 1) {
+                    document.getElementById(varstrmap.get(handContext) + '2').children[0].replaceWith(handContext[index + 1].getHTML())
+                    document.getElementById(varstrmap.get(handContext) + '3').children[0].replaceWith(handContext[index + 2].getHTML())
+                } else if (cardNum === 2) {// chose the middle card
+                    document.getElementById(varstrmap.get(handContext) + '3').children[0].replaceWith(handContext[index + 1].getHTML())
+                }
+            } else {//targeted display deletion
+                //set card to empty element (aka empty document fragment) 
+                document.getElementById(varstrmap.get(handContext) + cardNum).children[0].replaceWith(document.createDocumentFragment())
+                //set the card to have no background
+                document.getElementById(varstrmap.get(handContext) + cardNum).style = ""
+            }
+        } else if (onOppHand && !(onOppHand && onPlayFinal && onOppPen && onPlayPen && onOppFinal)) {
+            if (opphand.length < 3) {
+                //set card to empty element (aka empty document fragment) 
+                document.getElementById(varstrmap.get(handContext) + index).children[0].replaceWith(document.createDocumentFragment())
+                //set the card to have no background
+                document.getElementById(varstrmap.get(handContext) + index).style = ""
+            } else {
+                updateExtra()
+            }
+        } else if (!onOppHand && !onPlayHand && (onPlayFinal || onOppFinal || onOppPen || onPlayPen)) {
+            //set card to empty element (aka empty document fragment) 
+            document.getElementById(varstrmap.get(handContext) + index).children[0].replaceWith(document.createDocumentFragment())
+            //set the card to have no background
+            document.getElementById(varstrmap.get(handContext) + index).style = ""
+        }
+        //update the draw, center, trash piles and arrows as needed
+        updatePiles()
+        return rv
+    }
 }
 // helper function used in judgeCard() to determine if the chosen card is a 2, 7, or 10
 // all special cards are collected by the center
