@@ -556,12 +556,14 @@ function shiftRight(){
 }
 // update the numbers next to the arrows
 // the numbers are supposed to represent how many more cards are on each side while player is perusing through their hand
-function updateArrows(){
+function updateArrows() {
     var leftcounter = document.getElementById('cards-left-left'), rightcounter = document.getElementById('cards-left-right');
     var card1 = document.getElementById('playhand1'), card3 = document.getElementById('playhand3')
-    var leftindex = searchCard(card1, playhand), rightindex = searchCard(card3, playhand)
-    rightcounter.innerHTML = "&nbsp;" + (playhand.length - rightindex-1)
-    leftcounter.innerHTML = leftindex
+    if (!(card1 === undefined || card3 === undefined)) {
+        var leftindex = searchCard(card1, playhand), rightindex = searchCard(card3, playhand)
+        rightcounter.innerHTML = "&nbsp;" + (playhand.length - rightindex - 1)
+        leftcounter.innerHTML = leftindex
+    }
 }
 // assigns the event listeners based on which hand the player is on
 // also determines if the player has won
@@ -599,7 +601,7 @@ function playerTurn(){
         playerWon=false
     }
 }
-
+// automated opponent
 function oppTurn() {
     turnOver = true
     var playable = [], out = 0
