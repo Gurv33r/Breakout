@@ -600,6 +600,121 @@ function playerTurn(){
     }
 }
 
+function oppTurn() {
+    turnOver = true
+    var playable = [], out = 0
+    if (opphand.length > 0) {
+        onOppHand = true
+        onOppFinal = onOppPen = false
+        console.log(onOppHand, onOppPen, onOppFinal)
+        //iterate through opp hand and find all playable cards
+        for (let card of opphand) {
+            // since judge card actually executes special cards, this is here to check if the card is special before executing it
+            if (isSpecialCard(card)) {
+                playable.push()
+                continue
+            } else if (judgeCard(card) !== 1) {
+                playable.push(card)
+            }
+        }
+        //no playable cards case
+        if (playable.length === 0) {
+            collectCenter()
+        }
+        //only 1 playable card case
+        else if (playable.length === 1) {
+            out = placeCard(opphand, null, opphand.indexOf(playable[0]))
+            console.log('Opponent played', playable[0])
+        }
+        //multiple playable cards case
+        else {
+            //find the lowest playable card that isn't special
+            var lowest = playable[0]
+            for (let card of playable) {
+                if (vmap.get(card) < vmap.get(lowest) && !isSpecialCard(card)) {
+                    lowest = card
+                }
+            }
+            out = placeCard(opphand, null, opphand.indexOf(lowest))
+            console.log('Opponent played', lowest)
+        }
+        updatePiles()
+    }
+    //opppen case
+    else if (opphand.length === 0 && opppen.length > 0 && drawEmpty && oppfinal.length === 3) {
+        onOppPen = true
+        onOppHand = onOppFinal = false
+        console.log(onOppHand, onOppPen, onOppFinal)
+        //iterate through opppen and find all playable cards
+        for (let card of opppen) {
+            // since judge card actually executes special cards, this is here to check if the card is special before executing it
+            if (isSpecialCard(card)) {
+                playable.push()
+            }
+            else if (judgeCard(card) !== 1) {
+                playable.push(card)
+            }
+        }
+        //no playable cards case
+        if (playable.length === 0) {
+            collectCenter()
+        }
+        //only 1 playable card case
+        else if (playable.length === 1) {
+            out = placeCard(opppen, null, opppen.indexOf(playable[0]))
+            console.log('Opponent played', playable[0])
+        }
+        //multiple playable cards case
+        else {
+            //find the lowest playable card that isn't special
+            var lowest = playable[0]
+            for (let card of playable) {
+                if (vmap.get(card) < vmap.get(lowest) && !isSpecialCard(card)) {
+                    lowest = card
+                }
+            }
+            out = placeCard(opppen, null, opppen.indexOf(lowest))
+            console.log('Opponent played', lowest)
+        }
+        updatePiles()
+    }
+    //opp final case
+    else if ((opphand.length + opppen.length === 0) && drawEmpty && oppfinal.length > 0) {
+        // blind placement - custom
+        onOppFinal = true
+        onOppHand = onOppPen = false
+        console.log(onOppHand, onOppPen, onOppFinal)
+        //chose a random index
+        const chosenNum = Math.floor(Math.random() * 3) // = random num 0-2
+        const outcome = placeCard(oppfinal, null, chosenNum)
+        if (out === 1) {
+            center.collectSingle(oppfinal[chosenNum])
+            collectCenter()
+        } else if (outcome === 4) {
+            out = outcome
+        }
+    }
+    if (out === 4) {
+        oppTurn()
+        if (oppWon) {
+            playerWon = false
+            oppWon = true
+            //break game
+           determineWinner()
+        }
+    }
+    if ((opphand.length + opppen.length + oppfinal.length === 0) && drawEmpty) {
+       playerWon = false
+       oppWon = true
+       //break game
+        determineWinner()
+    } else {
+        turnOver = false
+        oppWon = false
+    }
+    updatePiles()
+}
+
 //ending sequence that occurs after the game is over
 function determineWinner(){
     playerWon ? alert("You have bested the machine! Give yourself a pat on the back") : alert('You lost. Tough break, buddy. Reload the page to try again')
