@@ -1,10 +1,17 @@
 import Deck from "./deck.js";
 import vmap from "./values.js"; // used to compare cards - check judgeCard() for more details
 
+// TODO: since playhand and opphand can actually have lengths < 3, update that display
+// TODO: opp final should be a blind flip still, so choose a random card and play it
+// TODO: update judgeCard() so when someone places a 7 down, it should return a 7. 
+    //it shouldn't affect the rest of the player process but its needed for oppTurn(). 
+    //oppTurn() needs to decide between which special cards to play
+
+
 var oppfinal=new Array(3),opppen=new Array(3),playfinal=new Array(3),playpen=new Array(3);
 var opphand=[], playhand=[],center=new Deck(),trash=new Deck();
 var past7=false, drawEmpty = false, onPlayHand=false, onPlayPen=false, onPlayFinal=false, playerWon=false, onOppHand=false, onOppPen=false, onOppFinal=false;
-var turnOver = false
+var turnOver = false, oppWon = false
 //empty the center and trash piles
 center.emptyDeck();
 trash.emptyDeck();
@@ -23,21 +30,25 @@ draw.shuffle();
 //starts and sets the flow of the game
 //currently just deals the cards and gives the player a turn
 function game(){
-    dealCards()
-    // game :
-    // while(true){
-        
-    //     if(await playerTurn()){
-    //         playerWon=true
-    //         break
+    if (dealCards()){
+         playerTurn()
+    }
+
+    // game:
+    // while (!playerWon || !oppWon){
+    //     playerTurn()
+    //     if(playerWon){
+    //         break game
     //     }
-    //     if(await oppTurn()){
-    //         playerWon=false
-    //         break
+    //     oppTurn()
+    //     if(oppWon){
+    //         break game
     //     }
-    // } 
-    playerTurn()
+    // }
+    // determineWinner()
     
+    console.log('test')
+    //oppTurn()
 }
 // after someone places a 10:
     // the center pile should be transferred to the trash pile 
@@ -104,6 +115,8 @@ function updatePiles(){
     }
     // update the numbers next to the arrows
     updateArrows()
+    // update the extra cards display of the opponenet
+    updateExtra()
 }
 //startup sequence for the game
 //allocates cards from the draw pile to each of the hands and finally one to the center to start things off
@@ -139,6 +152,7 @@ function dealCards(){
     }
     center.collectSingle(startingCard);
     updatePiles();
+    return true
 }
 //allocates a card from the draw pile to the given hand
 function drawCard(handContext){
@@ -150,239 +164,243 @@ function drawCard(handContext){
     }
     return handContext
 }
-//shuts off player interactivity with their cards and ends their turn
-function endPlayerTurn(){
-    console.log('Ending player turn')
-    if(!turnOver){
-        //remove all event listeners
-        document.getElementById('collect-button').removeEventListener('click', collectCenter)
-        if (onPlayHand && !onPlayPen && !onPlayFinal){ // player hand case
-        document.getElementById('left-arrow').removeEventListener('click',shiftLeft)
-        document.getElementById('right-arrow').removeEventListener('click', shiftRight)
-        document.getElementById('playhand1').removeEventListener('click', chooseCard1)
-        document.getElementById('playhand2').removeEventListener('click', chooseCard2)
-        document.getElementById('playhand3').removeEventListener('click', chooseCard3)
-        } else if (onPlayPen && !onPlayHand && !onPlayFinal){// play penultimate case
-        document.getElementById('playpen1').removeEventListener('click', chooseCard1)
-        document.getElementById('playpen2').removeEventListener('click', chooseCard2)
-        document.getElementById('playpen3').removeEventListener('click', chooseCard3)
-        } else if (onPlayFinal && !onPlayHand && !onPlayPen){//finalhand case
-        document.getElementById('playfinal1').removeEventListener('click', chooseCard1)
-        document.getElementById('playfinal2').removeEventListener('click', chooseCard2)
-        document.getElementById('playfinal3').removeEventListener('click', chooseCard3)
-        }
-        turnOver = true
-    }
-}
 //provides funtionality to the collect button
 //player's hand collects the entirety of the center pile
-function collectCenter(){
+function collectCenter() {
     //collect the center into the right hand
-    if(!turnOver){
+    if (!turnOver) {
         playhand = playhand.concat(center.cards)
-        endPlayerTurn()
+        for (var i = 1; i <= 3; i++) {
+            let slot = document.getElementById('playhand' + i)
+            if (slot.children.length === 0) { // empty slot
+                slot.appendChild(playhand[i - 1].getHTML())
+            }
+        }
+        updatePiles()
     } else {
         opphand = opphand.concat(center.cards)
         turnOver = false
+        for (var i = 1; i <= 3; i++) {
+            let slot = document.getElementById('opphand' + i)
+            if (slot.children.length === 0) { // empty slot
+                slot.appendChild(opphand[i - 1].getHTML())
+            }
+        }
+        updateExtra()
     }
     //empty the deck
     center.emptyDeck()
+    clearCenter()
     //update the center pile and arrows
     updatePiles()
 }
 // event listener for left cards
-function chooseCard1(){
+function chooseCard1() {
     var out = 0 // used for responding outcome of placing the card the player chose onto the center pile
-    
+    console.log('clicked card 1')
     // check if it is still the player's turn
-    if (!turnOver){
-        if (onPlayHand){ // player is on their first hand
-            out = placeCard(playhand,1) // find the outcome of the player's choice 
+    if (!turnOver) {
+        if (onPlayHand) { // player is on their first hand
+            out = placeCard(playhand, 1, null) // find the outcome of the player's choice 
         } else if (onPlayPen) { // player is on their penultimate hand 
-            out = placeCard(playpen,1) // find the outcome of the player's choice 
-        } else if (onPlayFinal){ // player is on their final hand
-            out = placeCard(playfinal, 1) // find the outcome of the player's choice 
-        } 
+            out = placeCard(playpen, 1, null) // find the outcome of the player's choice 
+        } else if (onPlayFinal) { // player is on their final hand
+            out = placeCard(playfinal, 1, null) // find the outcome of the player's choice 
+        }
     } else {
-        if (onOppHand){ //opponent is on their first hand
-            out = placeCard(opphand,1) // find the outcome of opponent's choice
+        if (onOppHand) { //opponent is on their first hand
+            out = placeCard(opphand, 1, null) // find the outcome of opponent's choice
         } else if (onOppPen) { // opponent is on their penultimate hand
-            out = placeCard(opppen,1) // find the outcome of opponent's choice
-        } else if (onOppFinal){ // opponent is on their final hand
-            out = placeCard(oppfinal, 1) // find the outcome of opponent's choice
-        } 
-    }
-
-    // chosen card was rejected case
-    if(out === 1){
-        if (onPlayFinal && !onPlayHand && !onPlayPen){// final card was rejected
-            //remove the card slot
-            var chosenCard = document.getElementById('playfinal1')
-            chosenCard.style.backgroundColor = "";
-            //push card to playhand
-            const index = searchCard(chosenCard,playfinal)
-            playhand.push(playfinal[index])
-            // remove the card from playfinal
-            playfinal.splice(index,1)
-            //playhand collects center
-            collectCenter()
-
-        } else {
-            playerTurn()
+            out = placeCard(opppen, 1, null) // find the outcome of opponent's choice
+        } else if (onOppFinal) { // opponent is on their final hand
+            out = placeCard(oppfinal, 1, null) // find the outcome of opponent's choice
         }
     }
-    
-    if(out ===0 || out === 10){
-        endPlayerTurn()
-    }
-    if(out===2){
-        playerTurn()
-        /*
-        if(playerWon){
-            break game
-            determineWinner()
+    return new Promise((resolve, reject)=>{
+        // chosen card was rejected case
+        if (out === 1) {
+            if (onPlayFinal && !onPlayHand && !onPlayPen) {// final card was rejected
+                //remove the card slot
+                var chosenCard = document.getElementById('playfinal1')
+                chosenCard.style.backgroundColor = "";
+                //push card to playhand
+                const index = searchCard(chosenCard, playfinal)
+                playhand.push(playfinal[index])
+                // remove the card from playfinal
+                playfinal.splice(index, 1)
+                //playhand collects center
+                collectCenter()
+                resolve('collected')
+            } else {
+                resolve('rejected')
+            }
         }
-         */
-    }
+        if (out === 0 || out === 10 || out === 7) {
+            resolve('success')
+        }
+        if (out === 2) {
+            resolve('reset')
+        }
+    })
 }
 // same as chooseCard1() but for the cards in the middle column
-function chooseCard2(){
+function chooseCard2() {
     var out = 0
-    if (!turnOver){
-        if (onPlayHand){
-            out = placeCard(playhand,2)
-            // if(outcome > 0){
-            //     break game
-            // }
+    console.log('clicked card 2')
+    if (!turnOver) {
+        if (onPlayHand) {
+            out = placeCard(playhand, 2, null)
         } else if (onPlayPen) {
-            out = placeCard(playpen,2)
-        } else if (onPlayFinal){
-            out = placeCard(playfinal, 2)
-        } 
-    } else {
-        if (onOppHand){
-            out = placeCard(opphand,2)
-        } else if (onOppPen) {
-            out = placeCard(opppen,2)
-        } else if (onOppFinal){
-            out = placeCard(oppfinal, 2)
-        } 
-    }
-    if(out === 1){
-        if (onPlayFinal && !onPlayHand && !onPlayPen){// final card was rejected
-            //remove the card slot
-            var chosenCard = document.getElementById('playfinal2')
-            chosenCard.style.backgroundColor = "";
-            //push card to playhand
-            const index = searchCard(chosenCard,playfinal)
-            playhand.push(playfinal[index])
-            // remove the card from playfinal
-            playfinal.splice(index,1)
-            //playhand collects center
-            collectCenter()
-
-        } else {
-             playerTurn()
+            out = placeCard(playpen, 2, null)
+        } else if (onPlayFinal) {
+            out = placeCard(playfinal, 2, null)
         }
-        
+    } else {
+        if (onOppHand) {
+            out = placeCard(opphand, 2, null)
+        } else if (onOppPen) {
+            out = placeCard(opppen, 2, null)
+        } else if (onOppFinal) {
+            out = placeCard(oppfinal, 2, null)
+        }
     }
-    if(out ===0 || out === 10){
-        endPlayerTurn()
-    }
-    if(out===2){
-        playerTurn()
-        
-        /*
-        break game
-        determineWinner()
-         */
-    }
+    return new Promise((resolve, reject)=>{
+        // chosen card was rejected case
+        if (out === 1) {
+            if (onPlayFinal && !onPlayHand && !onPlayPen) {// final card was rejected
+                //remove the card slot
+                var chosenCard = document.getElementById('playfinal1')
+                chosenCard.style.backgroundColor = "";
+                //push card to playhand
+                const index = searchCard(chosenCard, playfinal)
+                playhand.push(playfinal[index])
+                // remove the card from playfinal
+                playfinal.splice(index, 1)
+                //playhand collects center
+                collectCenter()
+                resolve('collected')
+            } else {
+                resolve('rejected')
+            }
+        }
+        if (out === 0 || out === 10 || out === 7) {
+            resolve('success')
+        }
+        if (out === 2) {
+            resolve('reset')
+        }
+    })
 }
 //same as chooseCard1() but for the cards in the right column
-function chooseCard3(){
+function chooseCard3() {
+    console.log('clicked card 3')
     var out = 0
-    if (!turnOver){
-        if (onPlayHand){
-            out = placeCard(playhand,3)
+    if (!turnOver) {
+        if (onPlayHand) {
+            out = placeCard(playhand, 3, null)
         } else if (onPlayPen) {
-            out = placeCard(playpen,3)
-        } else if (onPlayFinal){
-            out = placeCard(playfinal, 3)
-        } 
+            out = placeCard(playpen, 3, null)
+        } else if (onPlayFinal) {
+            out = placeCard(playfinal, 3, null)
+        }
     } else {
-        if (onOppHand){
-            out = placeCard(opphand,3)
+        if (onOppHand) {
+            out = placeCard(opphand, 3, null)
         } else if (onOppPen) {
-            out = placeCard(opppen,3)
-        } else if (onOppFinal){
-            out = placeCard(oppfinal, 3)
-        } 
-    }
-    if(out === 1){
-        if (onPlayFinal && !onPlayHand && !onPlayPen){// final card was rejected
-            //remove the card slot
-            var chosenCard = document.getElementById('playfinal3')
-            chosenCard.style.backgroundColor = "";
-            //push card to playhand
-            const index = searchCard(chosenCard,playfinal)
-            playhand.push(playfinal[index])
-            // remove the card from playfinal
-            playfinal.splice(index,1)
-            //playhand collects center
-            collectCenter()
-        } else {
-             playerTurn()
+            out = placeCard(opppen, 3, null)
+        } else if (onOppFinal) {
+            out = placeCard(oppfinal, 3, null)
         }
-        
     }
-    if(out ===0 || out === 10){
-        endPlayerTurn()
-    }
-    //will check if the player has won on after placing down a 2 
-    if(out===2){
-        playerTurn()
-        /*
-        if (playerWon){
-            break game
-            determineWinner()
+    return new Promise((resolve, reject)=>{
+        // chosen card was rejected case
+        if (out === 1) {
+            if (onPlayFinal && !onPlayHand && !onPlayPen) {// final card was rejected
+                //remove the card slot
+                var chosenCard = document.getElementById('playfinal1')
+                chosenCard.style.backgroundColor = "";
+                //push card to playhand
+                const index = searchCard(chosenCard, playfinal)
+                playhand.push(playfinal[index])
+                // remove the card from playfinal
+                playfinal.splice(index, 1)
+                //playhand collects center
+                collectCenter()
+                resolve('collected')
+            } else {
+                resolve('rejected')
+            }
         }
-         */
-    }
+        if (out === 0 || out === 10 || out === 7) {
+            resolve('success')
+        }
+        if (out === 2) {
+            resolve('reset')
+        }
+    })
 }
 //created for event listener arg since it cannot take arguments itself
 //places card onto the center pile or rejects the card based on the result of judgeCard()
 //also updates the display of the hand after placing the card
-function placeCard(handContext, cardNum){
-     const chosenCard = document.getElementById(varstrmap.get(handContext) + cardNum) // find the input
-     const index = searchCard(chosenCard, handContext) //
-     var outcome = 3, rv = 0 // rv will notify how to response to the card's placement, outcome indicates the the center's reaction to the card
-     if(index>=0){ // if the input is valid 
-         // check the center's reaction to the card
-         outcome = judgeCard(handContext[index]) 
-         if (outcome === 1){ // card shouldn't be placed down
-             return 1
-         } else { // card is placed down
-             center.collectSingle(handContext[index])
-             handContext.splice(index,1) // remove the card from the hand
-             rv = outcome
-         }
-         // draw a card if necessary
-         if (playhand.length<3 && onPlayHand && !onPlayPen && !onPlayFinal && !drawEmpty){
+function placeCard(handContext, cardNum, index) {
+    var toPlace = undefined
+    if (cardNum !== null && index === null) {
+        index = searchCard(document.getElementById(varstrmap.get(handContext) + cardNum), handContext)
+    }
+    toPlace = handContext[index]
+    var outcome = 3, rv = 0 // rv will notify how to response to the card's placement, outcome indicates the the center's reaction to the card
+    if (index >= 0) { // if the input is valid 
+        // check the center's reaction to the card
+        outcome = judgeCard(toPlace)
+        if (outcome === 1) { // card shouldn't be placed down
+            return 1
+        } else if (outcome === 0) { // card should be placed down
+            center.collectSingle(toPlace)
+        }
+        //acts upon all placeable cards (inlucding special cards)
+        handContext.splice(index, 1) // remove the card from the hand
+        rv = outcome
+        // draw a card if necessary
+        if (playhand.length < 3 && onPlayHand && !onPlayPen && !onPlayFinal && !drawEmpty && !turnOver) {
             playhand = drawCard(playhand)
-         }
-     }
-     //updates hand display after all the changes
-    chosenCard.children[0].replaceWith(playhand[index].getHTML()) // update chosen card's display
-     // update the the rest of the cards given the position of the chosen card - accommadate for the drawn card
-    if (cardNum === 1){ //chose the leftmost card
-         document.getElementById(varstrmap.get(handContext) + '2').children[0].replaceWith(playhand[index+1].getHTML())
-         document.getElementById(varstrmap.get(handContext) + '3').children[0].replaceWith(playhand[index+2].getHTML())
-     } else if(cardNum === 2){// chose the middle card
-        document.getElementById(varstrmap.get(handContext) + '3').children[0].replaceWith(playhand[index+1].getHTML())
-     }
-     //update the draw, center, trash piles and arrows as needed
-     updatePiles()
-     return rv
+        } else if (opphand.length < 3 && onOppHand && !onOppPen && !onOppFinal && !drawEmpty && turnOver) {
+            opphand = drawCard(opphand)
+        }
+        if (onPlayHand && !(onOppHand || onPlayFinal || onOppPen || onPlayPen || onOppFinal)) {
+            if (playhand.length >= 3) { //update display
+                document.getElementById(varstrmap.get(handContext) + cardNum).children[0].replaceWith(handContext[index].getHTML()) // update chosen card's display
+                // update the rest of the hand's display
+                if (cardNum === 1) {
+                    document.getElementById(varstrmap.get(handContext) + '2').children[0].replaceWith(handContext[index + 1].getHTML())
+                    document.getElementById(varstrmap.get(handContext) + '3').children[0].replaceWith(handContext[index + 2].getHTML())
+                } else if (cardNum === 2) {// chose the middle card
+                    document.getElementById(varstrmap.get(handContext) + '3').children[0].replaceWith(handContext[index + 1].getHTML())
+                }
+            } else {//targeted display deletion
+                //set card to empty element (aka empty document fragment) 
+                document.getElementById(varstrmap.get(handContext) + cardNum).children[0].replaceWith(document.createDocumentFragment())
+                //set the card to have no background
+                document.getElementById(varstrmap.get(handContext) + cardNum).style = ""
+            }
+        } else if (onOppHand && !(onOppHand && onPlayFinal && onOppPen && onPlayPen && onOppFinal)) {
+            if (opphand.length < 3) {
+                //set card to empty element (aka empty document fragment) 
+                document.getElementById(varstrmap.get(handContext) + index).children[0].replaceWith(document.createDocumentFragment())
+                //set the card to have no background
+                document.getElementById(varstrmap.get(handContext) + index).style = ""
+            } else {
+                updateExtra()
+            }
+        } else if (!onOppHand && !onPlayHand && (onPlayFinal || onOppFinal || onOppPen || onPlayPen)) {
+            //set card to empty element (aka empty document fragment) 
+            document.getElementById(varstrmap.get(handContext) + index).children[0].replaceWith(document.createDocumentFragment())
+            //set the card to have no background
+            document.getElementById(varstrmap.get(handContext) + index).style = ""
+        }
+        //update the draw, center, trash piles and arrows as needed
+        updatePiles()
+        return rv
+    }
 }
 // helper function used in judgeCard() to determine if the chosen card is a 2, 7, or 10
 // all special cards are collected by the center
@@ -404,14 +422,6 @@ function execute2(){
     } else {
         return 4
     }
-    // else {
-    //     if(oppTurn()){
-    //         playerWon = false
-    //         return 2;// someone won
-    //     } else {
-    //         return 0 
-    //     }
-    // }
 }
 // sets the 7 card into effect
 // the actual effect is implemented in judgeCard()
@@ -434,37 +444,48 @@ function execute10(){
 // otherwise returns 0 for success (i.e. the top card is less than the given card)
 // if a player doesn't have any cards that don't make judgeCard() return a 1, then the player must collect the center 
 function judgeCard(card){
-    var top = ""
-    past7 ? top = "7" : top = center.topCard.value
+    var top = "", rv = 0
+    if (center.size === 0){ // center is empty
+        top = "2"
+    } else if (past7){ // 7 was just played
+        top = "7"
+    } else { // top card is non special
+        top = center.topCard.value
+    }
     // special case trumps all
     if (isSpecialCard(card)){
+        center.collectSingle(card)
         past7 = false
         updatePiles()
         if (card.value === "2"){
-            return execute2()
+            rv =  execute2()
         } else if (card.value === "7"){
             execute7()
-            return 0
+            rv = 7
         } else if (card.value === "10"){
             execute10()
-            return 10
+            rv = 10
         }    
     }
     else if (vmap.get(card.value) > vmap.get(top)){ // card is greater than top card
         if(past7){ // bad if the last card was a 7
-            return 1
+            rv = 1
+        } else {
+            past7=false
+            rv = 0 // fine in the normal case
         }
-        past7=false
-        return 0 // fine in the normal case
+        
     } 
     else if (vmap.get(card.value) <= vmap.get(top)){ // card is less than or equal to the top card
         //if the card was = to 7, it should've been handled already in the special case code
         if(past7){ // good if the last card was a 7
             past7=false
-            return 0
+            rv = 0
+        } else {
+            rv = 1// bad in the normal case
         }
-        return 1// bad in the normal case
     }
+    return rv
 }
 // provides functionality to the left arrow 
 // changes the display of the hand when clicked, allowing player to access the card they've collected
@@ -512,54 +533,237 @@ function shiftRight(){
 }
 // update the numbers next to the arrows
 // the numbers are supposed to represent how many more cards are on each side while player is perusing through their hand
-function updateArrows(){
+function updateArrows() {
     var leftcounter = document.getElementById('cards-left-left'), rightcounter = document.getElementById('cards-left-right');
     var card1 = document.getElementById('playhand1'), card3 = document.getElementById('playhand3')
-    var leftindex = searchCard(card1, playhand), rightindex = searchCard(card3, playhand)
-    rightcounter.innerHTML = "&nbsp;" + (playhand.length - rightindex-1)
-    leftcounter.innerHTML = leftindex
+    if (card1.children.length === 1 && card3.children.length === 1) {
+        var leftindex = searchCard(card1, playhand), rightindex = searchCard(card3, playhand)
+        rightcounter.innerHTML = "&nbsp;" + (playhand.length - rightindex - 1)
+        leftcounter.innerHTML = leftindex
+    }
 }
 // assigns the event listeners based on which hand the player is on
 // also determines if the player has won
 function playerTurn(){
-    if (playfinal.length + playpen.length + playhand.length + draw.size == 0){ // done
-        playerWon=true
-    } else {
-        turnOver = false
-        document.getElementById('collect-button').addEventListener('click',collectCenter)
-        if (playhand.length>0){ // player hand case
-            onPlayHand=true
-            onPlayFinal=false
-            onPlayPen=false
-            document.getElementById('left-arrow').addEventListener('click',shiftLeft)
-            document.getElementById('right-arrow').addEventListener('click', shiftRight)
-            document.getElementById('playhand1').addEventListener('click', chooseCard1)
-            document.getElementById('playhand2').addEventListener('click', chooseCard2)
-            document.getElementById('playhand3').addEventListener('click', chooseCard3)
-        } else if (drawEmpty && playhand.length ===0 && playpen.length>0 && playfinal.length>0){// play penultimate case
-            onPlayHand=false
-            onPlayFinal=false
-            onPlayPen=true
-            document.getElementById('playpen1').addEventListener('click', chooseCard1)
-            document.getElementById('playpen2').addEventListener('click', chooseCard2)
-            document.getElementById('playpen3').addEventListener('click', chooseCard3)
-        } else if (drawEmpty && playhand.length ===0 && playpen.length === 0 && playfinal.length>0){//finalhand case
-            onPlayHand=false
-            onPlayPen=false
-            onPlayFinal=true
-            document.getElementById('playfinal1').addEventListener('click', chooseCard1)
-            document.getElementById('playfinal2').addEventListener('click', chooseCard2)
-            document.getElementById('playfinal3').addEventListener('click', chooseCard3)
-        }
-        playerWon=false
+    onPlayHand = onPlayPen = onPlayFinal = turnOver = false
+    if (playhand.length + playpen.length + playfinal.length === 0 ){
+        playerWon = true
+        oppWon = false
+        turnOver = true
+        return
     }
+    if (playhand.length>0){ // player hand case
+        onPlayHand=true
+        document.getElementById('left-arrow').addEventListener('click',shiftLeft)
+        document.getElementById('right-arrow').addEventListener('click', shiftRight)
+    } else if (drawEmpty && playhand.length ===0 && playpen.length>0 && playfinal.length>0){// play penultimate case
+        onPlayPen=true
+    } else if (drawEmpty && playhand.length ===0 && playpen.length === 0 && playfinal.length>0){//finalhand case
+        onPlayFinal=true
+    }
+    var card1,card2,card3,collect, done = false
+    // while(!done){
+        console.log('starting loop')
+        document.getElementById('playhand1').addEventListener('click', card1 = async function c1() {
+            let result = await chooseCard3()
+            console.log(result)
+            //remove all event listeners
+            document.getElementById('collect-button').removeEventListener('click', collect)
+            document.getElementById('playhand1').removeEventListener('click', card1)
+            document.getElementById('playhand2').removeEventListener('click', card2)
+            document.getElementById('playhand3').removeEventListener('click', card3)
+            if(result === 'reset' || result === 'rejected'){
+                playerTurn()
+            }
+            done = true
+        })
+        // if (done){
+        //     break
+        // }
+        document.getElementById('playhand2').addEventListener('click', card2 = async function c2() {
+            let result = await chooseCard3()
+            console.log(result)
+            //remove all event listeners
+            document.getElementById('collect-button').removeEventListener('click', collect)
+            document.getElementById('playhand1').removeEventListener('click', card1)
+            document.getElementById('playhand2').removeEventListener('click', card2)
+            document.getElementById('playhand3').removeEventListener('click', card3)
+            if(result === 'reset' || result === 'rejected'){
+                playerTurn()
+            }
+            done = true
+        })
+        // if (done){
+        //     break
+        // }
+        document.getElementById('playhand3').addEventListener('click', card3 = async function c3(){
+            let result = await chooseCard3()
+            console.log(result)
+            //remove all event listeners
+            document.getElementById('collect-button').removeEventListener('click', collect)
+            document.getElementById('playhand1').removeEventListener('click', card1)
+            document.getElementById('playhand2').removeEventListener('click', card2)
+            document.getElementById('playhand3').removeEventListener('click', card3)
+            if(result === 'reset' || result === 'rejected'){
+                playerTurn()
+            }
+            done = true
+        })
+        // if (done){
+        //     break
+        // }
+        document.getElementById('collect-button').addEventListener('click', collect = function c(){
+            collectCenter()
+            document.getElementById('collect-button').removeEventListener('click', collect)
+            document.getElementById('playhand1').removeEventListener('click', card1)
+            document.getElementById('playhand2').removeEventListener('click', card2)
+            document.getElementById('playhand3').removeEventListener('click', card3)
+            done = true
+        })
+        // if (done ){
+        //     break
+        // }
+        //break
+    //}
+    updatePiles()
+    if (done){
+        console.log('ending player turn')
+        turnOver = true
+        playerWon = false
+    }
+    updatePiles()
+    console.log('ending player turn')
 }
-
 //ending sequence that occurs after the game is over
 function determineWinner(){
     playerWon ? alert("You have bested the machine! Give yourself a pat on the back") : alert('You lost. Tough break, buddy. Reload the page to try again')
 }
-
-//start the game by calling game()
+function oppTurn() {
+    turnOver = true
+    onPlayHand=onPlayPen=onPlayFinal=false
+    var playable = [], out = 0
+    if (opphand.length > 0) {
+        onOppHand = true
+        onOppFinal = onOppPen = false
+        //iterate through opp hand and find all playable cards
+        for (let card of opphand) {
+            // since judge card actually executes special cards, this is here to check if the card is special before executing it
+            if (isSpecialCard(card)) {
+                playable.push()
+                continue
+            } else if (judgeCard(card) !== 1) {
+                playable.push(card)
+            }
+        }
+        console.log('playable cards = ', playable)
+        //no playable cards case
+        if (playable.length === 0) {
+            collectCenter()
+        }
+        //only 1 playable card case
+        else if (playable.length === 1) {
+            out = placeCard(opphand, null, opphand.indexOf(playable[0]))
+            console.log('Opponent played', playable[0])
+        }
+        //multiple playable cards case
+        else {
+            //find the lowest playable card that isn't special
+            var lowest = playable[0]
+            for (let card of playable) {
+                if (vmap.get(card) < vmap.get(lowest) && !isSpecialCard(card)) {
+                    lowest = card
+                }
+            }
+            out = placeCard(opphand, null, opphand.indexOf(lowest))
+            console.log('Opponent played', lowest)
+        }
+    }
+    //opppen case
+    else if (opphand.length === 0 && opppen.length > 0 && drawEmpty && oppfinal.length === 3) {
+        onOppPen = true
+        onOppHand = onOppFinal = false
+        //iterate through opppen and find all playable cards
+        for (let card of opppen) {
+            // since judge card actually executes special cards, this is here to check if the card is special before executing it
+            if (isSpecialCard(card)) {
+                playable.push()
+            }
+            else if (judgeCard(card) !== 1) {
+                playable.push(card)
+            }
+        }
+        console.log('playable cards = ', playable)
+        //no playable cards case
+        if (playable.length === 0) {
+            collectCenter()
+        }
+        //only 1 playable card case
+        else if (playable.length === 1) {
+            out = placeCard(opppen, null, opppen.indexOf(playable[0]))
+            console.log('Opponent played', playable[0])
+        }
+        //multiple playable cards case
+        else {
+            //find the lowest playable card that isn't special
+            var lowest = playable[0]
+            for (let card of playable) {
+                if (vmap.get(card) < vmap.get(lowest) && !isSpecialCard(card)) {
+                    lowest = card
+                }
+            }
+            out = placeCard(opppen, null, opppen.indexOf(lowest))
+            console.log('Opponent played', lowest)
+        }
+    }
+    //opp final case
+    else if ((opphand.length + opppen.length === 0) && drawEmpty && oppfinal.length > 0) {
+        // blind placement - custom
+        onOppFinal = true
+        onOppHand = onOppPen = false
+        console.log(onOppHand, onOppPen, onOppFinal)
+        //chose a random index
+        const chosenNum = Math.floor(Math.random() * 3) // = random num 0-2
+        console.log('Will play', oppfinal[chosenNum])
+        const outcome = placeCard(oppfinal, null, chosenNum)
+        if (out === 1) {
+            center.collectSingle(oppfinal[chosenNum])
+            collectCenter()
+        } else if (outcome === 4) {
+            out = outcome
+        }
+    }
+    if (out === 4) {
+        oppTurn()
+        if (oppWon) {
+            playerWon = false
+            oppWon = true
+            //break game
+           determineWinner()
+        }
+    }
+    if ((opphand.length + opppen.length + oppfinal.length === 0) && drawEmpty) {
+       playerWon = false
+       oppWon = true
+       //break game
+        determineWinner()
+    } else {
+        turnOver = false
+        oppWon = false
+    }
+    updatePiles()
+}
+//updates opponent's extra cards size
+function updateExtra(){
+    var extra = document.querySelector('#extra')
+    if(opphand.length>=3){
+        extra.innerHTML = 'Opponent<br>has<br>'+ (opphand.length-3) + '<br>additional<br>cards' 
+    }
+}
+// //start the game by calling game()
+// document.addEventListener('load', () =>{
+    
+//     // game()
+//     //game()
+// },true)
+//game()
 game()
-
