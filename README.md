@@ -1,2 +1,3 @@
 # Breakout
-SIngle player card game made in HTML, CSS, and Javascript
+Single player card game made in HTML, CSS, and Javascript.  
+Hosted with live server VSCode extension
