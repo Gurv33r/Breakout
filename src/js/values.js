@@ -3,4 +3,7 @@ const vmap = new Map()
 for (var i=1; i<=13;i++){
     vmap.set(VALUES[i-1], i)
 }
+vmap.delete("2")
+vmap.delete("7")
+vmap.delete("10")
 export {vmap as default}
